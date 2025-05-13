@@ -4,9 +4,24 @@ Log de Ações:
 - Verificado o consumo de categorias no componente EstoquePage.
 - Iniciado o servidor de desenvolvimento para testes no localhost.
 - Criado arquivo de status com o estado atual do projeto e pendências.
+- Configurado banco de dados PostgreSQL com Docker.
+- Criados modelos Sequelize para:
+  * Cliente
+  * Serviço
+  * Funcionário
+  * Agendamento (com relacionamentos)
+  * Produto/Estoque
+  * Categoria de Serviço
+  * Recompensa de Fidelidade
+- Implementadas rotas REST para Clientes e Serviços.
 
 Pendências:
-1. Integrar banco de dados real (ex: PostgreSQL, MongoDB).
+1. Implementar rotas REST para os novos modelos:
+   * Funcionários
+   * Agendamentos
+   * Produtos/Estoque
+   * Categorias de Serviço
+   * Recompensas de Fidelidade
 2. Garantir que todas as funcionalidades do backend estejam cobertas e robustas.
 3. Configurar serviços externos (ex: WhatsApp) para produção.
 4. Testar e garantir que o frontend esteja funcionando corretamente.

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import Servico from '@/models/Servico'
 
 // Simulando um banco de dados com um array
 let services = [
@@ -29,53 +30,32 @@ let services = [
 ]
 
 // GET /api/services
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const category = searchParams.get('category')
-  
-  let filteredServices = services
-  
-  if (category) {
-    filteredServices = services.filter(service => service.category === category)
+export async function GET() {
+  try {
+    const servicos = await Servico.findAll()
+    return NextResponse.json(servicos)
+  } catch (error) {
+    console.error('Erro ao buscar serviços:', error)
+    return NextResponse.json(
+      { error: 'Erro ao buscar serviços' },
+      { status: 500 }
+    )
   }
-  
-  return NextResponse.json(filteredServices)
 }
 
 // POST /api/services
 export async function POST(request: Request) {
-  const body = await request.json()
-  
-  // Validação básica
-  if (!body.name || !body.duration || !body.price || !body.category) {
+  try {
+    const data = await request.json()
+    const servico = await Servico.create(data)
+    return NextResponse.json(servico, { status: 201 })
+  } catch (error) {
+    console.error('Erro ao criar serviço:', error)
     return NextResponse.json(
-      { error: 'Dados incompletos' },
-      { status: 400 }
+      { error: 'Erro ao criar serviço' },
+      { status: 500 }
     )
   }
-  
-  // Verificar se o serviço já existe
-  const serviceExists = services.some(
-    service => service.name.toLowerCase() === body.name.toLowerCase()
-  )
-  
-  if (serviceExists) {
-    return NextResponse.json(
-      { error: 'Serviço já cadastrado' },
-      { status: 400 }
-    )
-  }
-  
-  const newService = {
-    id: Date.now().toString(),
-    ...body,
-    price: Number(body.price),
-    duration: Number(body.duration)
-  }
-  
-  services.push(newService)
-  
-  return NextResponse.json(newService, { status: 201 })
 }
 
 // PUT /api/services/:id

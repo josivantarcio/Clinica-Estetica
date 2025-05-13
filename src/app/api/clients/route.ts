@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import Cliente from '@/models/Cliente'
 
 // Simulando um banco de dados com um array
 let clients = [
@@ -23,54 +24,32 @@ let clients = [
 ]
 
 // GET /api/clients
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const search = searchParams.get('search')
-  
-  let filteredClients = clients
-  
-  if (search) {
-    const searchLower = search.toLowerCase()
-    filteredClients = clients.filter(
-      client => 
-        client.name.toLowerCase().includes(searchLower) ||
-        client.email.toLowerCase().includes(searchLower) ||
-        client.phone.includes(search)
+export async function GET() {
+  try {
+    const clientes = await Cliente.findAll()
+    return NextResponse.json(clientes)
+  } catch (error) {
+    console.error('Erro ao buscar clientes:', error)
+    return NextResponse.json(
+      { error: 'Erro ao buscar clientes' },
+      { status: 500 }
     )
   }
-  
-  return NextResponse.json(filteredClients)
 }
 
 // POST /api/clients
 export async function POST(request: Request) {
-  const body = await request.json()
-  
-  // Validação básica
-  if (!body.name || !body.email || !body.phone) {
+  try {
+    const data = await request.json()
+    const cliente = await Cliente.create(data)
+    return NextResponse.json(cliente, { status: 201 })
+  } catch (error) {
+    console.error('Erro ao criar cliente:', error)
     return NextResponse.json(
-      { error: 'Dados incompletos' },
-      { status: 400 }
+      { error: 'Erro ao criar cliente' },
+      { status: 500 }
     )
   }
-  
-  // Verificar se o email já existe
-  const emailExists = clients.some(client => client.email === body.email)
-  if (emailExists) {
-    return NextResponse.json(
-      { error: 'Email já cadastrado' },
-      { status: 400 }
-    )
-  }
-  
-  const newClient = {
-    id: Date.now().toString(),
-    ...body
-  }
-  
-  clients.push(newClient)
-  
-  return NextResponse.json(newClient, { status: 201 })
 }
 
 // PUT /api/clients/:id
