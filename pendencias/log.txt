@@ -1,0 +1,13 @@
+Log de Ações:
+
+- Corrigido o mock de categorias para usar IDs como strings.
+- Verificado o consumo de categorias no componente EstoquePage.
+- Iniciado o servidor de desenvolvimento para testes no localhost.
+- Criado arquivo de status com o estado atual do projeto e pendências.
+
+Pendências:
+1. Integrar banco de dados real (ex: PostgreSQL, MongoDB).
+2. Garantir que todas as funcionalidades do backend estejam cobertas e robustas.
+3. Configurar serviços externos (ex: WhatsApp) para produção.
+4. Testar e garantir que o frontend esteja funcionando corretamente.
+5. Configurar ambiente de produção e realizar deploy para as nuvens. 
