@@ -13,11 +13,8 @@ RUN npm install
 # Copie o restante do código da aplicação
 COPY . .
 
-# Gere o cliente Prisma e sincronize o schema com o banco
-RUN npx prisma generate && npx prisma db push
-
 # Exponha a porta da aplicação
 EXPOSE 3000
 
-# Comando para iniciar a aplicação em produção com limitação de memória
-CMD ["npm", "start"]
+# Comando para gerar Prisma Client, sincronizar schema e iniciar a aplicação em produção com limitação de memória
+CMD npx prisma generate && npx prisma db push && npm start
