@@ -6,8 +6,8 @@
 - [x] Implementado sistema de bloqueio após tentativas falhas
 - [x] Implementado sistema de logs de atividades
 - [x] Implementado sistema de notificações
-- [ ] Implementado sistema de backup automático
-- [ ] Implementado sistema de auditoria
+- [x] Implementado sistema de backup automático
+- [x] Implementado sistema de auditoria
 - [ ] Implementado sistema de criptografia de dados sensíveis
 
 [2024-03-19] Implementação dos Testes
