@@ -30,6 +30,11 @@ export default function LoginPage() {
   const toast = useToast();
   const router = useRouter();
   const { signIn } = useAuth();
+  const [error, setError] = useState('');
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryError, setRecoveryError] = useState('');
+  const [recoverySuccess, setRecoverySuccess] = useState(false);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -50,38 +55,27 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+    setError('');
     setIsLoading(true);
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Erro ao fazer login');
+        setError(data.message || data.error || 'Erro ao fazer login');
+        return;
       }
 
-      await signIn(data.token, data.user);
+      await signIn({ email });
       router.push('/dashboard');
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: error instanceof Error ? error.message : 'Credenciais inválidas',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      setError('Erro ao fazer login');
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +89,7 @@ export default function LoginPage() {
       return;
     }
 
-    setIsLoading(true);
+    setRecoveryLoading(true);
 
     try {
       const response = await fetch('/api/auth/forgot-password', {
@@ -131,7 +125,7 @@ export default function LoginPage() {
         isClosable: true,
       });
     } finally {
-      setIsLoading(false);
+      setRecoveryLoading(false);
     }
   };
 
@@ -225,7 +219,7 @@ export default function LoginPage() {
                   colorScheme="blue"
                   width="full"
                   type="submit"
-                  isLoading={isLoading}
+                  isLoading={recoveryLoading}
                 >
                   Enviar
                 </Button>
