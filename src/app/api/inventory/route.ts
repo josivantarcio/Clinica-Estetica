@@ -1,45 +1,32 @@
 import { NextResponse } from 'next/server'
+import Produto from '@/models/Produto'
+import { z } from 'zod'
 
-// Simulando um banco de dados
-let products = [
-  {
-    id: '1',
-    name: 'Shampoo Profissional',
-    category: 'Cabelo',
-    quantity: 15,
-    minQuantity: 5,
-    unit: 'unidade',
-    price: 45.90,
-    supplier: 'Distribuidora de Cosméticos LTDA',
-    lastRestock: '2024-03-15',
-  },
-  {
-    id: '2',
-    name: 'Máscara Capilar',
-    category: 'Cabelo',
-    quantity: 8,
-    minQuantity: 3,
-    unit: 'unidade',
-    price: 35.50,
-    supplier: 'Distribuidora de Cosméticos LTDA',
-    lastRestock: '2024-03-10',
-  },
-  {
-    id: '3',
-    name: 'Óleo Corporal',
-    category: 'Corpo',
-    quantity: 12,
-    minQuantity: 4,
-    unit: 'unidade',
-    price: 55.00,
-    supplier: 'Cosméticos Premium SA',
-    lastRestock: '2024-03-12',
-  },
-]
+// Schema de validação para produtos
+const produtoSchema = z.object({
+  nome: z.string().min(1, 'Nome é obrigatório'),
+  categoria: z.string().min(1, 'Categoria é obrigatória'),
+  quantidade: z.number().min(0, 'Quantidade não pode ser negativa'),
+  minQuantidade: z.number().min(0, 'Quantidade mínima não pode ser negativa'),
+  unidade: z.string().min(1, 'Unidade é obrigatória'),
+  preco: z.number().min(0, 'Preço não pode ser negativo'),
+  fornecedor: z.string().min(1, 'Fornecedor é obrigatório'),
+})
 
 // GET /api/inventory
 export async function GET() {
-  return NextResponse.json(products)
+  try {
+    const produtos = await Produto.findAll({
+      order: [['nome', 'ASC']],
+    })
+    return NextResponse.json(produtos)
+  } catch (error) {
+    console.error('Erro ao buscar produtos:', error)
+    return NextResponse.json(
+      { error: 'Erro ao buscar produtos' },
+      { status: 500 }
+    )
+  }
 }
 
 // POST /api/inventory
@@ -47,27 +34,32 @@ export async function POST(request: Request) {
   try {
     const data = await request.json()
     
-    // Validação dos campos obrigatórios
-    const requiredFields = ['name', 'category', 'quantity', 'minQuantity', 'unit', 'price', 'supplier']
-    for (const field of requiredFields) {
-      if (!data[field]) {
-        return NextResponse.json(
-          { error: `Campo ${field} é obrigatório` },
-          { status: 400 }
-        )
-      }
+    // Validar dados
+    const validatedData = produtoSchema.parse(data)
+    
+    // Verificar se produto já existe
+    const existingProduct = await Produto.findOne({
+      where: { nome: validatedData.nome }
+    })
+    
+    if (existingProduct) {
+      return NextResponse.json(
+        { error: 'Produto já existe' },
+        { status: 400 }
+      )
     }
-
-    // Criar novo produto
-    const newProduct = {
-      id: Date.now().toString(),
-      ...data,
-      lastRestock: new Date().toISOString().split('T')[0],
-    }
-
-    products.push(newProduct)
-    return NextResponse.json(newProduct, { status: 201 })
+    
+    const produto = await Produto.create(validatedData)
+    return NextResponse.json(produto, { status: 201 })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Erro ao criar produto:', error)
     return NextResponse.json(
       { error: 'Erro ao criar produto' },
       { status: 500 }
@@ -76,29 +68,30 @@ export async function POST(request: Request) {
 }
 
 // PUT /api/inventory/[id]
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const data = await request.json()
-    const productIndex = products.findIndex(p => p.id === params.id)
-
-    if (productIndex === -1) {
+    const validatedData = produtoSchema.parse(data)
+    
+    const produto = await Produto.findByPk(params.id)
+    if (!produto) {
       return NextResponse.json(
         { error: 'Produto não encontrado' },
         { status: 404 }
       )
     }
-
-    // Atualizar produto
-    products[productIndex] = {
-      ...products[productIndex],
-      ...data,
-    }
-
-    return NextResponse.json(products[productIndex])
+    
+    await produto.update(validatedData)
+    return NextResponse.json(produto)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Erro ao atualizar produto:', error)
     return NextResponse.json(
       { error: 'Erro ao atualizar produto' },
       { status: 500 }
@@ -107,26 +100,25 @@ export async function PUT(
 }
 
 // DELETE /api/inventory/[id]
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const productIndex = products.findIndex(p => p.id === params.id)
-
-    if (productIndex === -1) {
+    const produto = await Produto.findByPk(params.id)
+    if (!produto) {
       return NextResponse.json(
         { error: 'Produto não encontrado' },
         { status: 404 }
       )
     }
-
-    // Remover produto
-    products = products.filter(p => p.id !== params.id)
-    return NextResponse.json({ message: 'Produto removido com sucesso' })
-  } catch (error) {
+    
+    await produto.destroy()
     return NextResponse.json(
-      { error: 'Erro ao remover produto' },
+      { message: 'Produto excluído com sucesso' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Erro ao excluir produto:', error)
+    return NextResponse.json(
+      { error: 'Erro ao excluir produto' },
       { status: 500 }
     )
   }

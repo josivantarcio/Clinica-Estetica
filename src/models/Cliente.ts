@@ -8,6 +8,9 @@ class Cliente extends Model {
   public telefone!: string;
   public dataNascimento!: Date;
   public observacoes?: string;
+  public pontos!: number;
+  public nivel!: 'Bronze' | 'Prata' | 'Ouro' | 'Diamante';
+  public totalGasto!: number;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -42,6 +45,21 @@ Cliente.init(
     observacoes: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    pontos: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    nivel: {
+      type: DataTypes.ENUM('Bronze', 'Prata', 'Ouro', 'Diamante'),
+      allowNull: false,
+      defaultValue: 'Bronze',
+    },
+    totalGasto: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      defaultValue: 0,
     },
   },
   {

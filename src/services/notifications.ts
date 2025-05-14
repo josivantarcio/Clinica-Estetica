@@ -1,6 +1,9 @@
 // Simulação de integração com WhatsApp
 // Em produção, você deve usar uma API real de WhatsApp como Twilio, MessageBird, etc.
 
+import { whatsappService } from './whatsapp';
+import { logger } from '../utils/logger';
+
 interface NotificationData {
   phone: string
   message: string
@@ -8,17 +11,11 @@ interface NotificationData {
 
 export async function sendWhatsAppNotification(data: NotificationData): Promise<boolean> {
   try {
-    // Aqui você deve implementar a integração real com a API do WhatsApp
-    console.log('Enviando mensagem WhatsApp:', {
-      to: data.phone,
-      message: data.message
-    })
-    
-    // Simulando sucesso
-    return true
+    await whatsappService.enviarMensagem(data.phone, data.message);
+    return true;
   } catch (error) {
-    console.error('Erro ao enviar mensagem WhatsApp:', error)
-    return false
+    logger.error('Erro ao enviar notificação WhatsApp:', error);
+    return false;
   }
 }
 
@@ -28,7 +25,7 @@ export function generateAppointmentConfirmationMessage(
   date: string,
   time: string
 ): string {
-  return `Olá ${clientName}! Seu agendamento para ${service} foi confirmado para ${new Date(date).toLocaleDateString('pt-BR')} às ${time}. Aguardamos você!`
+  return `Olá ${clientName}! Seu agendamento para ${service} foi confirmado para ${new Date(date).toLocaleDateString('pt-BR')} às ${time}. Aguardamos você!`;
 }
 
 export function generateAppointmentReminderMessage(
@@ -37,7 +34,7 @@ export function generateAppointmentReminderMessage(
   date: string,
   time: string
 ): string {
-  return `Olá ${clientName}! Lembrete: você tem um agendamento para ${service} amanhã (${new Date(date).toLocaleDateString('pt-BR')}) às ${time}. Aguardamos você!`
+  return `Olá ${clientName}! Lembrete: você tem um agendamento para ${service} amanhã (${new Date(date).toLocaleDateString('pt-BR')}) às ${time}. Aguardamos você!`;
 }
 
 export function generateAppointmentCancellationMessage(
@@ -46,5 +43,5 @@ export function generateAppointmentCancellationMessage(
   date: string,
   time: string
 ): string {
-  return `Olá ${clientName}! Seu agendamento para ${service} no dia ${new Date(date).toLocaleDateString('pt-BR')} às ${time} foi cancelado. Entre em contato conosco para reagendar.`
-} 
+  return `Olá ${clientName}! Seu agendamento para ${service} no dia ${new Date(date).toLocaleDateString('pt-BR')} às ${time} foi cancelado. Entre em contato conosco para reagendar.`;
+}

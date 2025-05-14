@@ -1,82 +1,158 @@
 import { NextResponse } from 'next/server'
+import Cliente from '@/models/Cliente'
+import { z } from 'zod'
+import { Op } from 'sequelize'
 
-// Simulando um banco de dados com arrays
-let loyaltyPrograms = [
-  {
-    id: '1',
-    name: 'Maria Silva',
-    points: 750,
-    level: 'Prata',
-    totalSpent: 1500.00,
-    nextLevel: 'Ouro',
-    pointsToNextLevel: 1000
-  },
-  {
-    id: '2',
-    name: 'João Santos',
-    points: 1200,
-    level: 'Ouro',
-    totalSpent: 2400.00,
-    nextLevel: 'Diamante',
-    pointsToNextLevel: 2000
-  },
-  {
-    id: '3',
-    name: 'Ana Oliveira',
-    points: 450,
-    level: 'Bronze',
-    totalSpent: 900.00,
-    nextLevel: 'Prata',
-    pointsToNextLevel: 500
-  }
-]
+// Schema de validação para programa de fidelidade
+const loyaltySchema = z.object({
+  clienteId: z.string().uuid('ID do cliente inválido'),
+  pontos: z.number().min(0, 'Pontos não podem ser negativos'),
+  nivel: z.enum(['Bronze', 'Prata', 'Ouro', 'Diamante'], {
+    errorMap: () => ({ message: 'Nível inválido' })
+  }),
+  totalGasto: z.number().min(0, 'Total gasto não pode ser negativo'),
+})
+
+type Nivel = 'Bronze' | 'Prata' | 'Ouro' | 'Diamante'
 
 // GET /api/loyalty
 export async function GET() {
-  return NextResponse.json(loyaltyPrograms)
+  try {
+    const clientes = await Cliente.findAll({
+      attributes: [
+        'id',
+        'nome',
+        'pontos',
+        'nivel',
+        'totalGasto',
+      ],
+      where: {
+        pontos: {
+          [Op.gt]: 0 // Apenas clientes com pontos
+        }
+      },
+      order: [
+        ['pontos', 'DESC'],
+        ['nome', 'ASC']
+      ]
+    })
+
+    // Calcular próximo nível e pontos necessários
+    const clientesComProximosNiveis = clientes.map(cliente => {
+      const niveis: Nivel[] = ['Bronze', 'Prata', 'Ouro', 'Diamante']
+      const nivelAtualIndex = niveis.indexOf(cliente.nivel)
+      const proximoNivel = nivelAtualIndex < niveis.length - 1 ? niveis[nivelAtualIndex + 1] : null
+      
+      // Pontos necessários para próximo nível
+      const pontosNecessarios: Record<Nivel, number | null> = {
+        'Bronze': 500,
+        'Prata': 1000,
+        'Ouro': 2000,
+        'Diamante': null
+      }
+
+      return {
+        ...cliente.toJSON(),
+        proximoNivel,
+        pontosParaProximoNivel: proximoNivel ? pontosNecessarios[proximoNivel] - cliente.pontos : null
+      }
+    })
+
+    return NextResponse.json(clientesComProximosNiveis)
+  } catch (error: unknown) {
+    console.error('Erro ao buscar programa de fidelidade:', error)
+    return NextResponse.json(
+      { error: 'Erro ao buscar programa de fidelidade' },
+      { status: 500 }
+    )
+  }
 }
 
 // POST /api/loyalty
 export async function POST(request: Request) {
-  const body = await request.json()
-  
-  // Validação básica
-  if (!body.clientId || !body.points) {
+  try {
+    const data = await request.json()
+    const validatedData = loyaltySchema.parse(data)
+    
+    // Verificar se cliente existe
+    const cliente = await Cliente.findByPk(validatedData.clienteId)
+    if (!cliente) {
+      return NextResponse.json(
+        { error: 'Cliente não encontrado' },
+        { status: 404 }
+      )
+    }
+    
+    // Atualizar pontos e nível do cliente
+    await cliente.update({
+      pontos: validatedData.pontos,
+      nivel: validatedData.nivel,
+      totalGasto: validatedData.totalGasto
+    })
+    
+    return NextResponse.json(cliente, { status: 200 })
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Erro ao atualizar programa de fidelidade:', error)
     return NextResponse.json(
-      { error: 'Dados incompletos' },
-      { status: 400 }
+      { error: 'Erro ao atualizar programa de fidelidade' },
+      { status: 500 }
     )
   }
-  
-  // Atualizar pontos do cliente
-  const program = loyaltyPrograms.find(p => p.id === body.clientId)
-  if (!program) {
+}
+
+// PUT /api/loyalty/[clienteId]/points
+export async function PUT(request: Request, { params }: { params: { clienteId: string } }) {
+  try {
+    const data = await request.json()
+    const { pontos } = z.object({
+      pontos: z.number().min(0, 'Pontos não podem ser negativos')
+    }).parse(data)
+    
+    const cliente = await Cliente.findByPk(params.clienteId)
+    if (!cliente) {
+      return NextResponse.json(
+        { error: 'Cliente não encontrado' },
+        { status: 404 }
+      )
+    }
+    
+    // Atualizar pontos e recalcular nível
+    const novosPontos = cliente.pontos + pontos
+    const novoNivel = calcularNivel(novosPontos)
+    
+    await cliente.update({
+      pontos: novosPontos,
+      nivel: novoNivel
+    })
+    
+    return NextResponse.json(cliente)
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Erro ao atualizar pontos:', error)
     return NextResponse.json(
-      { error: 'Cliente não encontrado' },
-      { status: 404 }
+      { error: 'Erro ao atualizar pontos' },
+      { status: 500 }
     )
   }
-  
-  program.points += body.points
-  
-  // Atualizar nível
-  if (program.points >= 2000) {
-    program.level = 'Diamante'
-    program.nextLevel = 'Diamante'
-    program.pointsToNextLevel = 2000
-  } else if (program.points >= 1000) {
-    program.level = 'Ouro'
-    program.nextLevel = 'Diamante'
-    program.pointsToNextLevel = 2000
-  } else if (program.points >= 500) {
-    program.level = 'Prata'
-    program.nextLevel = 'Ouro'
-    program.pointsToNextLevel = 1000
-  } else {
-    program.level = 'Bronze'
-    program.nextLevel = 'Prata'
-    program.pointsToNextLevel = 500
-  }
-  
-  return NextResponse.json(program)
+}
+
+// Função auxiliar para calcular nível baseado nos pontos
+function calcularNivel(pontos: number): Nivel {
+  if (pontos >= 2000) return 'Diamante'
+  if (pontos >= 1000) return 'Ouro'
+  if (pontos >= 500) return 'Prata'
+  return 'Bronze'
 } 

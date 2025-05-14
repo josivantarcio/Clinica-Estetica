@@ -1,101 +1,71 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { CognitoIdentityProviderClient, InitiateAuthCommand } from '@aws-sdk/client-cognito-identity-provider'
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import Cookies from 'js-cookie'
 
 interface User {
   id: string
-  email: string
-  clinicaId: string
   nome: string
+  email: string
+  cargo: string
+  clinicaId?: string
 }
 
-interface AuthContextType {
+interface AuthContextData {
   user: User | null
-  isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  register: (data: {
-    nome: string
-    email: string
-    documento: string
-    plano: 'basico' | 'premium'
-    password: string
-  }) => Promise<void>
+  isAuthenticated: boolean
+  signIn: (token: string, user: User) => Promise<void>
+  signOut: () => void
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    // Check for stored session
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
+    // Verifica se há um token e usuário salvos nos cookies
+    const token = Cookies.get('@SalaoEstetica:token')
+    const storedUser = Cookies.get('@SalaoEstetica:user')
+
+    if (token && storedUser) {
       setUser(JSON.parse(storedUser))
+      setIsAuthenticated(true)
     }
-    setIsLoading(false)
   }, [])
 
-  const login = async (email: string, password: string) => {
-    try {
-      const client = new CognitoIdentityProviderClient({
-        region: process.env.NEXT_PUBLIC_AWS_REGION,
-      })
+  const signIn = async (token: string, user: User) => {
+    // Salva o token e usuário nos cookies
+    Cookies.set('@SalaoEstetica:token', token, {
+      expires: 7, // 7 dias
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    })
+    
+    Cookies.set('@SalaoEstetica:user', JSON.stringify(user), {
+      expires: 7, // 7 dias
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    })
 
-      const command = new InitiateAuthCommand({
-        AuthFlow: 'USER_PASSWORD_AUTH',
-        ClientId: process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID,
-        AuthParameters: {
-          USERNAME: email,
-          PASSWORD: password,
-        },
-      })
-
-      const response = await client.send(command)
-
-      if (response.AuthenticationResult) {
-        // TODO: Decode JWT and get user info
-        const userData: User = {
-          id: 'temp-id',
-          email,
-          clinicaId: 'temp-clinica-id',
-          nome: 'Temp Name',
-        }
-        setUser(userData)
-        localStorage.setItem('user', JSON.stringify(userData))
-      }
-    } catch (error) {
-      console.error('Login error:', error)
-      throw error
-    }
+    // Atualiza o estado
+    setUser(user)
+    setIsAuthenticated(true)
   }
 
-  const logout = async () => {
+  const signOut = () => {
+    // Remove o token e usuário dos cookies
+    Cookies.remove('@SalaoEstetica:token')
+    Cookies.remove('@SalaoEstetica:user')
+
+    // Limpa o estado
     setUser(null)
-    localStorage.removeItem('user')
-  }
-
-  const register = async (data: {
-    nome: string
-    email: string
-    documento: string
-    plano: 'basico' | 'premium'
-    password: string
-  }) => {
-    try {
-      // TODO: Implement registration with AWS Cognito and create clinic
-      console.log('Registration data:', data)
-    } catch (error) {
-      console.error('Registration error:', error)
-      throw error
-    }
+    setIsAuthenticated(false)
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )
@@ -103,8 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
+
   return context
 } 

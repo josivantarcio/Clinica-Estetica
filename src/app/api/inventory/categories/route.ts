@@ -1,67 +1,58 @@
 import { NextResponse } from 'next/server'
+import Categoria from '@/models/Categoria'
+import { z } from 'zod'
+import Produto from '@/models/Produto'
 
-// Simulando um banco de dados de categorias
-let categories = [
-  {
-    id: '1',
-    name: 'Cabelo',
-  },
-  {
-    id: '2',
-    name: 'Corpo',
-  },
-  {
-    id: '3',
-    name: 'Rosto',
-  },
-  {
-    id: '4',
-    name: 'Unhas',
-  },
-  {
-    id: '5',
-    name: 'Maquiagem',
-  },
-]
+// Schema de validação para categorias
+const categoriaSchema = z.object({
+  nome: z.string().min(1, 'Nome é obrigatório'),
+})
 
 // GET /api/inventory/categories
 export async function GET() {
-  return NextResponse.json(categories)
+  try {
+    const categorias = await Categoria.findAll({
+      order: [['nome', 'ASC']],
+    })
+    return NextResponse.json(categorias)
+  } catch (error) {
+    console.error('Erro ao buscar categorias:', error)
+    return NextResponse.json(
+      { error: 'Erro ao buscar categorias' },
+      { status: 500 }
+    )
+  }
 }
 
 // POST /api/inventory/categories
 export async function POST(request: Request) {
   try {
     const data = await request.json()
+    const validatedData = categoriaSchema.parse(data)
     
-    if (!data.name) {
-      return NextResponse.json(
-        { error: 'Nome da categoria é obrigatório' },
-        { status: 400 }
-      )
-    }
-
-    // Verificar se a categoria já existe
-    const categoryExists = categories.some(
-      c => c.name.toLowerCase() === data.name.toLowerCase()
-    )
-
-    if (categoryExists) {
+    // Verificar se categoria já existe
+    const existingCategory = await Categoria.findOne({
+      where: { nome: validatedData.nome }
+    })
+    
+    if (existingCategory) {
       return NextResponse.json(
         { error: 'Categoria já existe' },
         { status: 400 }
       )
     }
-
-    // Criar nova categoria
-    const newCategory = {
-      id: Date.now().toString(),
-      name: data.name,
-    }
-
-    categories.push(newCategory)
-    return NextResponse.json(newCategory, { status: 201 })
+    
+    const categoria = await Categoria.create(validatedData)
+    return NextResponse.json(categoria, { status: 201 })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Erro ao criar categoria:', error)
     return NextResponse.json(
       { error: 'Erro ao criar categoria' },
       { status: 500 }
@@ -70,49 +61,30 @@ export async function POST(request: Request) {
 }
 
 // PUT /api/inventory/categories/[id]
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const data = await request.json()
+    const validatedData = categoriaSchema.parse(data)
     
-    if (!data.name) {
-      return NextResponse.json(
-        { error: 'Nome da categoria é obrigatório' },
-        { status: 400 }
-      )
-    }
-
-    const categoryIndex = categories.findIndex(c => c.id === params.id)
-
-    if (categoryIndex === -1) {
+    const categoria = await Categoria.findByPk(params.id)
+    if (!categoria) {
       return NextResponse.json(
         { error: 'Categoria não encontrada' },
         { status: 404 }
       )
     }
-
-    // Verificar se o novo nome já existe em outra categoria
-    const nameExists = categories.some(
-      c => c.id !== params.id && c.name.toLowerCase() === data.name.toLowerCase()
-    )
-
-    if (nameExists) {
+    
+    await categoria.update(validatedData)
+    return NextResponse.json(categoria)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Já existe uma categoria com este nome' },
+        { error: 'Dados inválidos', details: error.errors },
         { status: 400 }
       )
     }
-
-    // Atualizar categoria
-    categories[categoryIndex] = {
-      ...categories[categoryIndex],
-      name: data.name,
-    }
-
-    return NextResponse.json(categories[categoryIndex])
-  } catch (error) {
+    
+    console.error('Erro ao atualizar categoria:', error)
     return NextResponse.json(
       { error: 'Erro ao atualizar categoria' },
       { status: 500 }
@@ -121,26 +93,37 @@ export async function PUT(
 }
 
 // DELETE /api/inventory/categories/[id]
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const categoryIndex = categories.findIndex(c => c.id === params.id)
-
-    if (categoryIndex === -1) {
+    const categoria = await Categoria.findByPk(params.id)
+    if (!categoria) {
       return NextResponse.json(
         { error: 'Categoria não encontrada' },
         { status: 404 }
       )
     }
-
-    // Remover categoria
-    categories = categories.filter(c => c.id !== params.id)
-    return NextResponse.json({ message: 'Categoria removida com sucesso' })
-  } catch (error) {
+    
+    // Verificar se existem produtos usando esta categoria
+    const produtosCount = await Produto.count({
+      where: { categoriaId: params.id }
+    })
+    
+    if (produtosCount > 0) {
+      return NextResponse.json(
+        { error: 'Não é possível excluir categoria com produtos associados' },
+        { status: 400 }
+      )
+    }
+    
+    await categoria.destroy()
     return NextResponse.json(
-      { error: 'Erro ao remover categoria' },
+      { message: 'Categoria excluída com sucesso' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Erro ao excluir categoria:', error)
+    return NextResponse.json(
+      { error: 'Erro ao excluir categoria' },
       { status: 500 }
     )
   }
