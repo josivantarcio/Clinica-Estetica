@@ -11,23 +11,23 @@
 - [x] Implementado sistema de criptografia de dados sensíveis
 
 [2024-03-19] Implementação dos Testes
-- Criado arquivo de teste para página de login
-- Criado arquivo de teste para página de agendamentos
-- Criado arquivo de teste para página de serviços
-- Criado arquivo de teste para página de estoque
-- Criado arquivo de teste para página de relatórios
-- Criado arquivo de teste para página de configurações
-- Criado arquivo de teste para página de perfil
-- Implementado mocks para chamadas à API
-- Adicionado testes de integração
-- Configurado ambiente de testes
-- Implementado testes de autenticação
-- Adicionado testes de formulários
-- Configurado testes de responsividade
-- Implementado testes de acessibilidade
-- Adicionado testes de performance
-- Configurado testes de segurança
-- Implementado testes de usabilidade
-- Adicionado testes de compatibilidade
-- Configurado testes de regressão
+- [x] Criado arquivo de teste para página de login
+- [x] Criado arquivo de teste para página de agendamentos
+- [x] Criado arquivo de teste para página de serviços
+- [x] Criado arquivo de teste para página de estoque
+- [x] Criado arquivo de teste para página de relatórios
+- [x] Criado arquivo de teste para página de configurações
+- [x] Criado arquivo de teste para página de perfil
+- [x] Implementado mocks para chamadas à API
+- [x] Adicionado testes de integração
+- [x] Configurado ambiente de testes
+- [x] Implementado testes de autenticação
+- [x] Adicionado testes de formulários
+- [x] Configurado testes de responsividade
+- [x] Implementado testes de acessibilidade
+- [x] Adicionado testes de performance
+- [x] Configurado testes de segurança
+- [x] Implementado testes de usabilidade
+- [x] Adicionado testes de compatibilidade
+- [x] Configurado testes de regressão
 - [x] Implementado testes de carga
