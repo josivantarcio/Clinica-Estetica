@@ -43,7 +43,32 @@ const mockAppointments = [
 ];
 
 // Mock do fetch
-(global as any).fetch = jest.fn();
+(global as any).fetch = jest.fn().mockImplementation((url: string) => {
+  if (url.includes('/api/reports')) {
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({
+        totalRevenue: 10000,
+        totalAppointments: 200,
+        revenueGrowth: 10,
+        appointmentsGrowth: 5,
+        revenueByService: [
+          { service: 'Corte de Cabelo', revenue: 5000 },
+          { service: 'Manicure', revenue: 3000 },
+        ],
+        appointmentsByStatus: [
+          { status: 'confirmado', count: 150 },
+          { status: 'pendente', count: 50 },
+        ],
+        revenueByMonth: [
+          { month: 'Janeiro', revenue: 2000 },
+          { month: 'Fevereiro', revenue: 3000 },
+        ],
+      }),
+    });
+  }
+  return Promise.reject(new Error('Not found'));
+});
 
 // Wrapper para renderizar componentes com ChakraProvider
 const renderWithChakra = (ui: React.ReactElement) => {

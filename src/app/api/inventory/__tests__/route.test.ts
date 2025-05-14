@@ -14,6 +14,7 @@ const mockProducts = [
     supplier: 'Distribuidora de Cosméticos LTDA',
     lastRestock: '2024-03-15',
   },
+  // Add more mock products if needed
 ]
 
 describe('Inventory API', () => {
@@ -65,8 +66,13 @@ describe('Inventory API', () => {
 
     it('deve retornar erro se faltar campos obrigatórios', async () => {
       const invalidProduct = {
-        name: 'Produto Inválido',
-        // Faltando campos obrigatórios
+        name: '',
+        category: '',
+        quantity: 0,
+        minQuantity: 0,
+        unit: '',
+        price: 0,
+        supplier: '',
       }
 
       const request = new NextRequest('http://localhost:3000/api/inventory', {

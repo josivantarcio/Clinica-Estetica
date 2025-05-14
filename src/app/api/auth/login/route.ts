@@ -61,12 +61,12 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60 // 7 dias
     }
 
-    const response = NextResponse.json({ success: true })
-    response.cookies.set('auth_token', data.token, cookieOptions)
+    const finalResponse = NextResponse.json({ success: true })
+    finalResponse.cookies.set('auth_token', data.token, cookieOptions)
 
-    return response
+    return finalResponse
   } catch (error) {
-    await log('error', 'login_error', error.message, 'failure')
+    await log('error', 'login_error', (error as Error).message, 'failure')
     return NextResponse.json(
       { error: 'Erro ao fazer login' },
       { status: 500 }
