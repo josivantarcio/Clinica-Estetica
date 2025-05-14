@@ -8,7 +8,7 @@
 - [x] Implementado sistema de notificações
 - [x] Implementado sistema de backup automático
 - [x] Implementado sistema de auditoria
-- [ ] Implementado sistema de criptografia de dados sensíveis
+- [x] Implementado sistema de criptografia de dados sensíveis
 
 [2024-03-19] Implementação dos Testes
 - Criado arquivo de teste para página de login
@@ -30,4 +30,4 @@
 - Implementado testes de usabilidade
 - Adicionado testes de compatibilidade
 - Configurado testes de regressão
-- Implementado testes de carga (pendente) 
+- Implementado testes de carga (pendente)
