@@ -7,8 +7,8 @@ WORKDIR /app
 # Copie o package.json e o package-lock.json
 COPY package*.json ./
 
-# Instale as dependências (inclui Prisma CLI)
-RUN npm install
+# Instale as dependências (inclui Prisma CLI) com --legacy-peer-deps para evitar conflitos
+RUN npm install --legacy-peer-deps
 
 # Copie o restante do código da aplicação
 COPY . .
