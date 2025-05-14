@@ -11,10 +11,27 @@
   "dependencies": {
     "@prisma/client": "^6.7.0",
     "express": "^4.18.2",
-    "pg": "^8.16.0"
+    "pg": "^8.16.0",
+    "sequelize": "^6.35.1",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.2",
+    "jsonwebtoken": "^9.0.2",
+    "otplib": "^12.0.1",
+    "qrcode": "^1.5.3",
+    "twilio": "^4.19.0",
+    "winston": "^3.11.0",
+    "crypto-js": "^4.2.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
+    "@types/express": "^4.17.21",
+    "@types/sequelize": "^4.28.19",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/qrcode": "^1.5.5",
+    "@types/crypto-js": "^4.2.1",
+    "@types/axios": "^0.14.0",
+    "@types/twilio": "^3.19.3",
     "nodemon": "^2.0.22",
     "prisma": "^6.7.0",
     "typescript": "^5.1.6"
