@@ -30,4 +30,4 @@
 - Implementado testes de usabilidade
 - Adicionado testes de compatibilidade
 - Configurado testes de regressão
-- Implementado testes de carga (pendente)
+- [x] Implementado testes de carga

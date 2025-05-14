@@ -1,0 +1,17 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+scenarios:
+  - flow:
+      - get:
+          url: '/api/clients'
+      - post:
+          url: '/api/agendamentos'
+          json:
+            clienteId: 1
+            servicoId: 1
+            data: '2024-03-20T10:00:00.000Z'
+          headers:
+            Content-Type: 'application/json'
