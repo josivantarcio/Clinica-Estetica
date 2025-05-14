@@ -26,7 +26,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifica as credenciais
-    const response = await fetch(`${process.env.API_URL}/auth/login`, {
+    if (!process.env.API_URL) {
+  await log('error', 'config_error', 'API_URL não está definida', 'failure');
+  return NextResponse.json(
+    { error: 'Configuração inválida' },
+    { status: 500 }
+  );
+}
+
+const response = await fetch(`${process.env.API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -66,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return finalResponse
   } catch (error) {
-    await log('error', 'login_error', (error as Error).message, 'failure')
+    await log('error', 'login_error', `Erro ao fazer login: ${(error as Error).message}`, 'failure')
     return NextResponse.json(
       { error: 'Erro ao fazer login' },
       { status: 500 }
