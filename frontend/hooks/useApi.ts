@@ -34,7 +34,10 @@ export function useApi() {
     headers.set('Content-Type', 'application/json')
 
     try {
-      const response = await fetch(`/api${endpoint}`, {
+      // Use backend API URL from environment variable if defined
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || ''
+      const url = `${baseUrl}${endpoint}`
+      const response = await fetch(url, {
         ...fetchOptions,
         headers
       })

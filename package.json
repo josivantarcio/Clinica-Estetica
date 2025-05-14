@@ -2,9 +2,10 @@
   "name": "clinica-estetica-backend",
   "version": "1.0.0",
   "description": "Backend API for Clinica Estetica, ready for Render deployment.",
-  "main": "src/app.ts",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "node src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
     "dev": "nodemon src/app.ts"
   },
   "dependencies": {
@@ -13,7 +14,9 @@
     "pg": "^8.16.0"
   },
   "devDependencies": {
+    "@types/node": "^18.11.18",
+    "nodemon": "^2.0.22",
     "prisma": "^6.7.0",
-    "nodemon": "^2.0.22"
+    "typescript": "^4.9.4"
   }
 }

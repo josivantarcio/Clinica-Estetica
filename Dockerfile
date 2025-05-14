@@ -16,5 +16,5 @@ COPY . .
 # Exponha a porta da aplicação
 EXPOSE 3000
 
-# Comando para gerar Prisma Client, sincronizar schema e iniciar a aplicação em produção com limitação de memória
-CMD npx prisma generate && npx prisma db push && npm start
+# Comando para gerar Prisma Client, sincronizar schema, compilar TypeScript e iniciar a aplicação em produção
+CMD npx prisma generate && npx prisma db push && npm run build && npm start
