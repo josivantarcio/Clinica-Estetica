@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 import LoginPage from '../page';
@@ -55,12 +55,12 @@ describe('LoginPage', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/senha/i);
 
-    await userEvent.type(emailInput, 'joao@example.com');
-    await userEvent.type(passwordInput, 'senha123');
+    await act(async () => { await userEvent.type(emailInput, 'joao@example.com'); });
+    await act(async () => { await act(async () => { await userEvent.type(passwordInput, 'senha123'); }); });
 
     // Submete formulário
     const submitButton = screen.getByRole('button', { name: /entrar/i });
-    await userEvent.click(submitButton);
+    await act(async () => { await userEvent.click(submitButton); });
 
     // Verifica se a requisição foi feita corretamente
     await waitFor(() => {
@@ -97,12 +97,12 @@ describe('LoginPage', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/senha/i);
 
-    await userEvent.type(emailInput, 'joao@example.com');
+    await act(async () => { await userEvent.type(emailInput, 'joao@example.com'); });
     await userEvent.type(passwordInput, 'senhaErrada');
 
     // Submete formulário
     const submitButton = screen.getByRole('button', { name: /entrar/i });
-    await userEvent.click(submitButton);
+    await act(async () => { await userEvent.click(submitButton); });
 
     // Verifica mensagem de erro
     await waitFor(() => {
@@ -115,7 +115,7 @@ describe('LoginPage', () => {
     
     // Tenta submeter formulário vazio
     const submitButton = screen.getByRole('button', { name: /entrar/i });
-    await userEvent.click(submitButton);
+    await act(async () => { await userEvent.click(submitButton); });
 
     // Verifica mensagens de erro
     expect(screen.getByText(/email é obrigatório/i)).toBeInTheDocument();
@@ -131,7 +131,7 @@ describe('LoginPage', () => {
 
     // Tenta submeter formulário
     const submitButton = screen.getByRole('button', { name: /entrar/i });
-    await userEvent.click(submitButton);
+    await act(async () => { await userEvent.click(submitButton); });
 
     // Verifica mensagem de erro
     expect(screen.getByText(/email inválido/i)).toBeInTheDocument();
@@ -171,11 +171,11 @@ describe('LoginPage', () => {
 
     // Preenche email
     const emailInput = screen.getByLabelText(/email/i);
-    await userEvent.type(emailInput, 'joao@example.com');
+    await act(async () => { await userEvent.type(emailInput, 'joao@example.com'); });
 
     // Envia solicitação
     const submitButton = screen.getByRole('button', { name: /enviar/i });
-    await userEvent.click(submitButton);
+    await act(async () => { await userEvent.click(submitButton); });
 
     // Verifica se a requisição foi feita corretamente
     await waitFor(() => {

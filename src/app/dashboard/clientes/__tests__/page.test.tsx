@@ -1,8 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
-import ClientesPage from '../page';
+import ClientesPage from '../../page';
 
 // Mock dos dados
 const mockClients = [
@@ -120,10 +120,18 @@ describe('ClientesPage', () => {
     });
 
     // Preenche campos do formulário
-    await userEvent.type(screen.getByLabelText(/nome/i), 'Novo Cliente');
-    await userEvent.type(screen.getByLabelText(/email/i), 'novo@example.com');
-    await userEvent.type(screen.getByLabelText(/telefone/i), '(11) 97777-7777');
-    await userEvent.type(screen.getByLabelText(/data de nascimento/i), '1995-10-20');
+    await act(async () => {
+      await userEvent.type(screen.getByLabelText(/nome/i), 'Novo Cliente');
+    });
+    await act(async () => {
+      await userEvent.type(screen.getByLabelText(/email/i), 'novo@example.com');
+    });
+    await act(async () => {
+      await userEvent.type(screen.getByLabelText(/telefone/i), '(11) 97777-7777');
+    });
+    await act(async () => {
+      await userEvent.type(screen.getByLabelText(/data de nascimento/i), '1995-10-20');
+    });
 
     // Submete formulário
     const submitButton = screen.getByRole('button', { name: /salvar/i });
