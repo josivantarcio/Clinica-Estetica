@@ -12,6 +12,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: "postgres://admin:admin123@postgres:5432/clinica"
+    volumes:
+      - .:/app
+    command: sh -c "npx prisma migrate dev && npm run dev"
+
   redis:
     image: redis:7-alpine
     ports:
