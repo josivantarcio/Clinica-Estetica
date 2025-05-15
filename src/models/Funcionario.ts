@@ -12,6 +12,22 @@ class Funcionario extends Model {
   public readonly updatedAt!: Date;
 } 
 
+Funcionario.init(
+  {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    nome: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    telefone: { type: DataTypes.STRING, allowNull: false },
+    cargo: { type: DataTypes.STRING, allowNull: false },
+  },
+  {
+    sequelize,
+    modelName: 'Funcionario',
+    tableName: 'funcionarios',
+  }
+);
+
+// Registrar hooks APÓS a inicialização do modelo
 Funcionario.beforeCreate((instance: Funcionario) => {
   instance.nome = encryptData(instance.nome);
   instance.email = encryptData(instance.email);
@@ -44,20 +60,5 @@ Funcionario.afterFind((instances: Funcionario | Funcionario[] | null) => {
     instances.telefone = decryptData(instances.telefone);
   }
 });
-
-Funcionario.init(
-  {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    nome: { type: DataTypes.STRING, allowNull: false },
-    email: { type: DataTypes.STRING, allowNull: false, unique: true },
-    telefone: { type: DataTypes.STRING, allowNull: false },
-    cargo: { type: DataTypes.STRING, allowNull: false },
-  },
-  {
-    sequelize,
-    modelName: 'Funcionario',
-    tableName: 'funcionarios',
-  }
-);
 
 export default Funcionario;
